@@ -98,7 +98,7 @@
         (testing "can invoke endpoint"
           (is (= 200 (-> (mc/response-for ctx :json)
                          deref
-                         (:status)))))))))
+                         :status))))))))
 
 (deftest as-test-context
   (testing "can use martian test functions with it"
@@ -108,5 +108,7 @@
           ctx (-> (sut/bootstrap "http://test" routes)
                   (sut/as-test-context)
                   (mt/respond-with {::test {:status 200}}))]
-      (is (= 200 (:status @(mc/response-for ctx ::test {}))))
-      (is (thrown? Exception (:status @(mc/response-for ctx ::other {})))))))
+      (is (= 200 (:status @(mc/response-for ctx ::test {})))
+          "successful request")
+      (is (thrown? Exception (:status @(mc/response-for ctx ::other {})))
+          "invalid request"))))

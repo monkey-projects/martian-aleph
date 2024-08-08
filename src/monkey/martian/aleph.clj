@@ -40,15 +40,17 @@
   (with-open [r (PushbackReader. (bs/to-reader s))]
     (edn/read r)))
 
-(defn- parse-json [s]
+(defn- parse-json [s key-fn]
   (with-open [r (bs/to-reader s)]
-    (json/parse-stream r keyword)))
+    (json/parse-stream r key-fn)))
 
-(def encoders
+(defn make-encoders [key-fn]
   {"application/edn"  {:encode pr-str
                        :decode parse-edn}
    "application/json" {:encode json/generate-string
-                       :decode parse-json}})
+                       :decode #(parse-json % key-fn)}})
+
+(def encoders (make-encoders keyword))
 
 (def default-interceptors
   (concat mc/default-interceptors [mi/default-encode-body
