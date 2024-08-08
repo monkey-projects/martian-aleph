@@ -9,7 +9,9 @@
             [martian
              [core :as mc]
              [encoders :as me]
-             [interceptors :as mi]]
+             [file :as mf]
+             [interceptors :as mi]
+             [openapi :as mo]]
             [tripod.context :as tc])
   (:import java.io.PushbackReader))
 
@@ -55,3 +57,36 @@
 
 (def default-opts
   {:interceptors default-interceptors})
+
+(defn bootstrap [api-root routes & [opts]]
+  (mc/bootstrap api-root routes (merge default-opts opts)))
+
+(defn- load-definition [url load-opts]
+  (letfn [(verify-response [resp]
+            (if (>= (:status resp) 400)
+              (throw (ex-info "Unable to load OpenAPI spec" resp))
+              resp))]
+    (or (mf/local-resource url)
+        @(md/chain
+          (http/get url (merge {:as :text} load-opts))
+          verify-response
+          :body
+          parse-json))))
+
+(defn bootstrap-openapi [url & [{:keys [server-url] :as opts} load-opts]]
+  (let [definition (load-definition url load-opts)
+        base-url (mo/base-url url server-url definition)]
+    (mc/bootstrap-openapi base-url definition (merge default-opts opts))))
+
+(def bootstrap-swagger bootstrap-openapi)
+
+(defn as-test-context
+  "Given a Martian context, converts it into a test context that can be used with
+   the functions as provided by `martian.test`"
+  [ctx]
+  ;; Replace the request handler name with the one from httpkit, because that's
+  ;; supported by martian.test and is also an async handler.
+  (update ctx :interceptors mi/inject
+          (assoc perform-request :name :martian.httpkit/perform-request)
+          :replace
+          (:name perform-request)))
