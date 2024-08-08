@@ -1,0 +1,15 @@
+{:deps {aleph/aleph {:mvn/version "0.8.1"}
+        com.github.oliyh/martian {:mvn/version "0.1.26"}}
+
+ :aliases
+ {:dev
+  {:extra-deps {ch.qos.logback/logback-classic {:mvn/version "1.5.6"}}
+   :extra-paths ["env/dev" "dev-resources"]}
+  
+  :test
+  {:extra-deps {com.monkeyprojects/build {:mvn/version "0.2.0"}}
+   :extra-paths ["test"]
+   :exec-fn monkey.test/all}
+
+  :junit
+  {:exec-fn monkey.test/junit}}}
