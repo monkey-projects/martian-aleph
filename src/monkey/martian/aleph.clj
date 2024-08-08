@@ -73,7 +73,7 @@
           (http/get url (merge {:as :text} load-opts))
           verify-response
           :body
-          parse-json))))
+          #(parse-json % keyword)))))
 
 (defn bootstrap-openapi [url & [{:keys [server-url] :as opts} load-opts]]
   (let [definition (load-definition url load-opts)
