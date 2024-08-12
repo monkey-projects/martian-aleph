@@ -4,7 +4,7 @@
   <packaging>jar</packaging>
   <groupId>com.monkeyprojects</groupId>
   <artifactId>martian-aleph</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.1-SNAPSHOT</version>
   <name>martian-aleph</name>
   <dependencies>
     <dependency>

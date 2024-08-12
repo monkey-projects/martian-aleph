@@ -29,7 +29,8 @@
     (-> ctx
         (mi/remove-stack)
         (assoc :response (md/chain
-                          (http/request request)
+                          (http/request (assoc request
+                                               :throw-exceptions false))
                           apply-interceptors)))))
 
 (def perform-request

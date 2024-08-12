@@ -52,6 +52,9 @@
      ["/edn"
       {:get edn-test-handler
        :operationId :edn}]
+     ["/failing"
+      {:get (constantly {:status 400})
+       :operationId :failing}]
      ["/swagger.json"
       {:no-doc true
        :middleware [wrap-swagger]
@@ -80,6 +83,15 @@
             resp (mc/response-for ctx :test-route)]
         (is (= 200 (:status @resp)))
         (is (= {:key "value"} (:body @resp)))))
+
+    (testing "does not throw exceptions on client errors"
+      (let [port (an/port server)
+            routes [{:route-name :failing-route
+                     :path-parts ["/failing"]
+                     :method :get}]
+            ctx (sut/bootstrap (str "http://localhost:" port) routes)
+            resp (mc/response-for ctx :failing-route)]
+        (is (= 400 (:status @resp)))))
 
     (testing "from swagger"
       (let [port (an/port server)
