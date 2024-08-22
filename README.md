@@ -25,6 +25,16 @@ If the endpoint provides an OpenAPI definition, you can set up a context:
 (def ctx (mma/bootstrap-openapi "https://some-rest-endpoint/swagger.json"))
 ```
 After that, you can use `martian.core/response-for` to send requests to the remote API.
+If necessary, you can pass in additional options for the Martian requests and also
+to load the OpenAPI spec.
+```clojure
+(mma/bootstrap-openapi
+  "swagger-url"                                  ; Url to the swagger page
+  {:interceptors my-interceptors}                ; Options to pass to the Martian client creator
+  {:headers {"Authorization" "Bearer <token>"}}) ; Options to pass to the openapi request
+```
+The Martian options are merged in with the `default-opts` map, which already contain
+    	    	    predefined interceptors.
 
 When defining your own routes (when the other end does not provide a spec), you
 can use `bootstrap`:
