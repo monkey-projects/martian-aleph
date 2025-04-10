@@ -12,6 +12,8 @@
              [file :as mf]
              [interceptors :as mi]
              [openapi :as mo]]
+            [muuntaja.core :as muc]
+            [muuntaja.format.yaml :as mfy]
             [tripod.context :as tc])
   (:import java.io.PushbackReader))
 
@@ -64,6 +66,17 @@
 (defn bootstrap [api-root routes & [opts]]
   (mc/bootstrap api-root routes (merge default-opts opts)))
 
+(def ^:private muuntaja
+  (muc/create
+   (assoc-in
+    muc/default-options
+    [:formats "application/yaml"] mfy/format)))
+
+(defn- parse-body [resp]
+  (muc/decode muuntaja
+              (get-in resp [:headers "Content-Type"])
+              (:body resp)))
+
 (defn- load-definition [url load-opts]
   (letfn [(verify-response [resp]
             (if (>= (:status resp) 400)
@@ -73,8 +86,7 @@
         @(md/chain
           (http/get url (merge {:as :text} load-opts))
           verify-response
-          :body
-          #(parse-json % keyword)))))
+          parse-body))))
 
 (defn bootstrap-openapi [url & [{:keys [server-url] :as opts} load-opts]]
   (let [definition (load-definition url load-opts)

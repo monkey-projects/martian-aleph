@@ -1,16 +1,18 @@
-{:deps {aleph/aleph {:mvn/version "0.8.1"}
-        com.github.oliyh/martian {:mvn/version "0.1.26"}}
+{:deps {aleph/aleph {:mvn/version "0.8.3"}
+        com.github.oliyh/martian {:mvn/version "0.1.30"}
+        metosin/muuntaja-cheshire {:mvn/version "0.6.11"}
+        metosin/muuntaja-yaml {:mvn/version "0.6.11"}}
 
  :aliases
  {:dev
-  {:extra-deps {ch.qos.logback/logback-classic {:mvn/version "1.5.6"}}
+  {:extra-deps {ch.qos.logback/logback-classic {:mvn/version "1.5.18"}}
    :extra-paths ["env/dev" "dev-resources"]}
   
   :test
-  {:extra-deps {com.monkeyprojects/build {:mvn/version "0.2.0"}
-                com.github.oliyh/martian-test {:mvn/version "0.1.26"}
-                metosin/reitit-ring {:mvn/version "0.7.1"}
-                metosin/reitit-swagger {:mvn/version "0.7.1"}}
+  {:extra-deps {com.monkeyprojects/build {:mvn/version "0.3.1"}
+                com.github.oliyh/martian-test {:mvn/version "0.1.30"}
+                metosin/reitit-ring {:mvn/version "0.8.0"}
+                metosin/reitit-swagger {:mvn/version "0.8.0"}}
    :extra-paths ["test"]
    :exec-fn monkey.test/all}
 
@@ -22,13 +24,18 @@
    :exec-args {:ns-regex ["monkey.martian.*"]}}
 
   :jar
-  {:extra-deps {com.monkeyprojects/build {:mvn/version "0.2.0"}
-                ch.qos.logback/logback-classic {:mvn/version "1.5.6"}}
+  {:extra-deps {com.monkeyprojects/build {:mvn/version "0.3.1"}
+                ch.qos.logback/logback-classic {:mvn/version "1.5.18"}}
    :exec-fn monkey.build/jar
    :exec-args {:jar "target/martian-aleph.jar"
                :lib "com.monkeyprojects/martian-aleph"
-               :version-env "LIB_VERSION"
-               :scm {:url "https://github.com/monkey-projects/martian-alepn"}}}
+               :version [[:env "LIB_VERSION"] "0.1.2-SNAPSHOT"]
+               :scm {:url "https://github.com/monkey-projects/martian-aleph"}
+               :pom-data
+               [[:licenses
+                 [:license
+                  [:name "MIT"]
+                  [:url "https://mit-license.org"]]]]}}
 
   :install
   {:exec-fn monkey.build/jar+install}

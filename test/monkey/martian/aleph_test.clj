@@ -4,6 +4,7 @@
              [http :as http]
              [netty :as an]]
             [cheshire.core :as json]
+            [clj-yaml.core :as yaml]
             [clojure.tools.logging :as log]
             [manifold.deferred :as md]
             [martian
@@ -38,10 +39,17 @@
    :body (pr-str {:key "value"})
    :headers {:content-type "application/edn"}})
 
-(defn wrap-swagger [handler]
+(defn wrap-swagger-json [handler]
   (fn [req]
     (-> (handler req)
-        (update :body json/generate-string))))
+        (update :body json/generate-string)
+        (assoc-in [:headers "Content-Type"] "application/json"))))
+
+(defn wrap-swagger-yaml [handler]
+  (fn [req]
+    (-> (handler req)
+        (update :body yaml/generate-string)
+        (assoc-in [:headers "Content-Type"] "application/yaml"))))
 
 (def router
   (rr/router
@@ -57,8 +65,14 @@
        :operationId :failing}]
      ["/swagger.json"
       {:no-doc true
-       :middleware [wrap-swagger]
-       :get (swagger/create-swagger-handler)}]]]))
+       :middleware [wrap-swagger-json]
+       :get (swagger/create-swagger-handler)
+       :produces "application/json"}]
+     ["/swagger.yaml"
+      {:no-doc true
+       :middleware [wrap-swagger-yaml]
+       :get (swagger/create-swagger-handler)
+       :produces "application/yaml"}]]]))
 
 (deftest integration-test
   (with-open [server (http/start-server (rr/ring-handler router) {:port 0})]
@@ -94,23 +108,45 @@
         (is (= 400 (:status @resp)))))
 
     (testing "from swagger"
-      (let [port (an/port server)
-            ctx (sut/bootstrap-openapi (format "http://localhost:%d/swagger.json" port))
-            spec (http/get (format "http://localhost:%d/swagger.json" port))]
+      (testing "json"
+        (let [port (an/port server)
+              url (format "http://localhost:%d/swagger.json" port)
+              ctx (sut/bootstrap-openapi url)
+              spec (http/get url)]
 
-        (testing "can fetch swagger"
-          (is (= 200 (:status @spec)))
-          (let [swagger (json/parse-string (slurp (:body @spec)))]
-            (is (not-empty swagger))
-            (is (some? (ms/swagger->handlers swagger)))))
+          (testing "can fetch swagger"
+            (is (= 200 (:status @spec)))
+            (let [swagger (json/parse-string (slurp (:body @spec)))]
+              (is (not-empty swagger))
+              (is (some? (ms/swagger->handlers swagger)))))
 
-        (testing "provides handlers"
-          (is (not-empty (:handlers ctx))))
+          (testing "provides handlers"
+            (is (not-empty (:handlers ctx))))
 
-        (testing "can invoke endpoint"
-          (is (= 200 (-> (mc/response-for ctx :json)
-                         deref
-                         :status))))))))
+          (testing "can invoke endpoint"
+            (is (= 200 (-> (mc/response-for ctx :json)
+                           deref
+                           :status))))))
+
+      (testing "yaml"
+        (let [port (an/port server)
+              url (format "http://localhost:%d/swagger.yaml" port)
+              ctx (sut/bootstrap-openapi url)
+              spec (http/get url)]
+
+          (testing "can fetch swagger"
+            (is (= 200 (:status @spec)))
+            (let [swagger (yaml/parse-string (slurp (:body @spec)))]
+              (is (not-empty swagger))
+              (is (some? (ms/swagger->handlers swagger)))))
+
+          (testing "provides handlers"
+            (is (not-empty (:handlers ctx))))
+
+          (testing "can invoke endpoint"
+            (is (= 200 (-> (mc/response-for ctx :json)
+                           deref
+                           :status)))))))))
 
 (deftest as-test-context
   (testing "can use martian test functions with it"
