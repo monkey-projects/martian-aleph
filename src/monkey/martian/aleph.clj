@@ -67,10 +67,11 @@
   (mc/bootstrap api-root routes (merge default-opts opts)))
 
 (def ^:private muuntaja
-  (muc/create
-   (assoc-in
-    muc/default-options
-    [:formats "application/yaml"] mfy/format)))
+  (let [f mfy/format]
+    (muc/create
+     (assoc-in
+      muc/default-options
+      [:formats (:name f)] f))))
 
 (defn- parse-body [resp]
   (muc/decode muuntaja

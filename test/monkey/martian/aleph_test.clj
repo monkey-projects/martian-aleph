@@ -49,7 +49,7 @@
   (fn [req]
     (-> (handler req)
         (update :body yaml/generate-string)
-        (assoc-in [:headers "Content-Type"] "application/yaml"))))
+        (assoc-in [:headers "Content-Type"] "application/x-yaml"))))
 
 (def router
   (rr/router
