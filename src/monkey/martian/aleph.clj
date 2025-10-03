@@ -56,7 +56,7 @@
 (def encoders (make-encoders keyword))
 
 (def default-interceptors
-  (concat mc/default-interceptors [mi/default-encode-body
+  (concat mc/default-interceptors [mi/default-encode-request
                                    (mi/coerce-response encoders)
                                    perform-request]))
 
