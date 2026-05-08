@@ -45,11 +45,11 @@
         (update :body json/generate-string)
         (assoc-in [:headers "Content-Type"] "application/json"))))
 
-(defn wrap-swagger-yaml [handler]
+(defn wrap-swagger-yaml [handler & [ct]]
   (fn [req]
     (-> (handler req)
         (update :body yaml/generate-string)
-        (assoc-in [:headers "Content-Type"] "application/x-yaml"))))
+        (assoc-in [:headers "Content-Type"] (or ct "application/x-yaml")))))
 
 (def router
   (rr/router
@@ -72,7 +72,12 @@
       {:no-doc true
        :middleware [wrap-swagger-yaml]
        :get (swagger/create-swagger-handler)
-       :produces "application/yaml"}]]]))
+       :produces "application/yaml"}]
+     ["/swagger-text.yaml"
+      {:no-doc true
+       :middleware [[wrap-swagger-yaml "text/yaml"]]
+       :get (swagger/create-swagger-handler)
+       :produces "text/yaml"}]]]))
 
 (deftest integration-test
   (with-open [server (http/start-server (rr/ring-handler router) {:port 0})]
@@ -129,24 +134,30 @@
                            :status))))))
 
       (testing "yaml"
-        (let [port (an/port server)
-              url (format "http://localhost:%d/swagger.yaml" port)
-              ctx (sut/bootstrap-openapi url)
-              spec (http/get url)]
+        (letfn [(verify-yaml [path]
+                  (let [port (an/port server)
+                        url (str "http://localhost:" port path)
+                        ctx (sut/bootstrap-openapi url)
+                        spec (http/get url)]
 
-          (testing "can fetch swagger"
-            (is (= 200 (:status @spec)))
-            (let [swagger (yaml/parse-string (slurp (:body @spec)))]
-              (is (not-empty swagger))
-              (is (some? (ms/swagger->handlers swagger)))))
+                    (testing "can fetch swagger"
+                      (is (= 200 (:status @spec)))
+                      (let [swagger (yaml/parse-string (slurp (:body @spec)))]
+                        (is (not-empty swagger))
+                        (is (some? (ms/swagger->handlers swagger)))))
 
-          (testing "provides handlers"
-            (is (not-empty (:handlers ctx))))
+                    (testing "provides handlers"
+                      (is (not-empty (:handlers ctx))))
 
-          (testing "can invoke endpoint"
-            (is (= 200 (-> (mc/response-for ctx :json)
-                           deref
-                           :status)))))))))
+                    (testing "can invoke endpoint"
+                      (is (= 200 (-> (mc/response-for ctx :json)
+                                     deref
+                                     :status))))))]
+          (testing "content type `application/x-yaml`"
+            (verify-yaml "/swagger.yaml"))
+
+          (testing "content type `text/yaml`"
+            (verify-yaml "/swagger-text.yaml")))))))
 
 (deftest as-test-context
   (testing "can use martian test functions with it"

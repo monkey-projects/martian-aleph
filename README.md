@@ -77,6 +77,6 @@ consider this a workaround.
 
 ## License
 
-Copyright (c) 2024 by [Monkey Projects](https://www.monkey-projects.be).
+Copyright (c) 2024-2026 by [Monkey Projects](https://www.monkey-projects.be).
 
 [MIT License](LICENSE)

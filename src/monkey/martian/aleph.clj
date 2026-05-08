@@ -69,9 +69,9 @@
 (def ^:private muuntaja
   (let [f mfy/format]
     (muc/create
-     (assoc-in
-      muc/default-options
-      [:formats (:name f)] f))))
+     (-> muc/default-options
+         (assoc-in [:formats (:name f)] f)
+         (assoc-in [:formats "text/yaml"] f)))))
 
 (defn- parse-body [resp]
   (muc/decode muuntaja
