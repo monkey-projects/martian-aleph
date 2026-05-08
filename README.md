@@ -75,6 +75,10 @@ In the future, it's the intention to actually PR this into the Martian source co
 itself, so we can also include the test code in `martian.test` itself.  But until then,
 consider this a workaround.
 
+## CI/CD
+
+Martian-Aleph is being built on [MonkeyCI](https://app.monkeyci.com/o/monkey-projects/r/Z2U1oZPgmenom6U9z1yh2b8U)
+
 ## License
 
 Copyright (c) 2024-2026 by [Monkey Projects](https://www.monkey-projects.be).
